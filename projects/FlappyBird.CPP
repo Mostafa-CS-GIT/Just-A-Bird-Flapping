@@ -10,12 +10,13 @@
 const float WINDOW_WIDTH = 800.0f;
 const float WINDOW_HEIGHT = 600.0f;
 const float BIRD_SIZE = 0.04f;
-const float GRAVITY = 0.0008f;
-const float JUMP_POWER = 0.025f;
+const float GRAVITY = 0.0015f;
+const float JUMP_POWER = 0.045f;
 const float PIPE_WIDTH = 0.15f;
-const float PIPE_GAP = 0.3f;
-const float PIPE_SPEED = 0.005f;
-const float PIPE_SPAWN_INTERVAL = 0.15f;
+const float PIPE_GAP = 0.35f;
+const float PIPE_SPEED = 0.0035f;
+const float PIPE_SPAWN_INTERVAL = 0.2f;
+const float INITIAL_PIPE_DELAY = 1.5f;
 
 // Bird color options
 enum BirdColor { RED, BLUE, GREEN, YELLOW, PURPLE };
@@ -43,6 +44,7 @@ int pipeCount = 0;
 int score = 0;
 int highScore = 0;
 float pipeTimer = 0.0f;
+float gameStartTimer = 0.0f;
 GameState gameState = MENU;
 float gameSpeed = 1.0f;
 
@@ -146,8 +148,14 @@ void updateBird(float deltaTime) {
         bird.velocity -= GRAVITY * gameSpeed;
         bird.y += bird.velocity * gameSpeed;
         
-        // Collision with ground or ceiling
-        if (bird.y - BIRD_SIZE <= -1.0f || bird.y + BIRD_SIZE >= 1.0f) {
+        // Collision with ground
+        if (bird.y - BIRD_SIZE <= -0.95f) {
+            gameState = GAME_OVER;
+            if (score > highScore) highScore = score;
+        }
+        
+        // Collision with ceiling
+        if (bird.y + BIRD_SIZE >= 0.95f) {
             gameState = GAME_OVER;
             if (score > highScore) highScore = score;
         }
@@ -158,13 +166,14 @@ void updateBird(float deltaTime) {
 void updatePipes(float deltaTime) {
     if (gameState != PLAYING) return;
     
+    gameStartTimer += deltaTime;
     pipeTimer += deltaTime;
     
-    // Spawn new pipe
-    if (pipeTimer >= PIPE_SPAWN_INTERVAL) {
+    // Spawn new pipe (with initial delay to let player prepare)
+    if (gameStartTimer >= INITIAL_PIPE_DELAY && pipeTimer >= PIPE_SPAWN_INTERVAL) {
         if (pipeCount < 10) {
             pipes[pipeCount].x = 1.2f;
-            pipes[pipeCount].gapY = ((rand() % 50) / 100.0f) - 0.25f;
+            pipes[pipeCount].gapY = ((rand() % 60) / 100.0f) - 0.25f;
             pipeCount++;
             pipeTimer = 0.0f;
         }
@@ -181,18 +190,11 @@ void updatePipes(float deltaTime) {
         if (pipes[i].x > -PIPE_WIDTH - 0.1f) {
             pipes[newPipeCount] = pipes[i];
             
-            // Score when bird passes pipe
-            if (pipes[i].x < bird.x && pipes[i].x + PIPE_WIDTH > bird.x) {
-                if (bird.y > pipes[i].gapY && bird.y < pipes[i].gapY + PIPE_GAP) {
-                    // Safe passage
-                } else {
-                    gameState = GAME_OVER;
-                    if (score > highScore) highScore = score;
-                }
-            }
-            
-            if (pipes[i].x + PIPE_WIDTH < bird.x && pipes[i].x + PIPE_WIDTH + 0.01f > bird.x) {
+            // Score increment when bird passes pipe center
+            static float lastScoredX = -2.0f;
+            if (pipes[i].x < bird.x && pipes[i].x > lastScoredX) {
                 score++;
+                lastScoredX = pipes[i].x;
             }
             
             newPipeCount++;
@@ -220,11 +222,12 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
             case GLFW_KEY_SPACE:
                 if (gameState == MENU) {
                     gameState = PLAYING;
-                    bird.y = 0.5f;
+                    bird.y = 0.0f;
                     bird.velocity = 0.0f;
                     score = 0;
                     pipeCount = 0;
                     pipeTimer = 0.0f;
+                    gameStartTimer = 0.0f;
                 } else if (gameState == PLAYING) {
                     bird.velocity = JUMP_POWER;
                 } else if (gameState == GAME_OVER) {
