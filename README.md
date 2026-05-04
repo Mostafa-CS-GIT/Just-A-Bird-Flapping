@@ -9,27 +9,7 @@ An interactive OpenGL Flappy Bird game built with **C++**, **GLFW**, and **GLEW*
 - 🖥️ Real-time OpenGL rendering with smooth 60 FPS gameplay
 - 🎯 Dynamic collision detection
 - 🎨 Customizable bird appearance and game mechanics
-- ⚙️ Full parameter adjustment without code logic changes
-
----
-
-## 🚀 Quick Start
-
-1. **Build and run:**
-   ```bash
-   cd projects/
-   g++ -o FlappyBird.exe FlappyBird.CPP -I D:\APPS\msys64\ucrt64\include -L D:\APPS\msys64\ucrt64\lib -lglfw3 -lglew32 -lopengl32
-   ./FlappyBird.exe
-   ```
-
-2. **Or in VS Code:** Press **Ctrl + Shift + B** to build and run
-
-3. **Controls:**
-   - **SPACE** — Jump / Start game
-   - **ESC** — Quit
-
----
-
+- ⚙️ Full parameter adjustment without code logic chan
 ## 📋 Game Constants
 
 All customizable values are at the top of `FlappyBird.cpp` after the `#include` lines. After any change, rebuild with **Ctrl + Shift + B**.
